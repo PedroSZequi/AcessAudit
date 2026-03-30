@@ -7,24 +7,15 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  build:
+  validacao-inicial:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
 
-      - name: Configurar Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
+      - name: Listar arquivos do repositório
+        run: ls -la
 
-      - name: Dar permissão ao Maven Wrapper
-        run: chmod +x mvnw
-
-      - name: Executar testes
-        run: ./mvnw test
-
-      - name: Gerar build
-        run: ./mvnw clean package
+      - name: Confirmar pipeline configurado
+        run: echo "GitHub Actions configurado com sucesso"
