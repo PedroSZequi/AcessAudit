@@ -10,6 +10,6 @@ Ferramenta web para auditoria de acessibilidade digital a partir de uma URL ou d
 
 ## Como executar localmente
 ```bash
-git clone https://github.com/SEU-USUARIO/accessaudit.git
-cd accessaudit
+git clone https://github.com/SEU-USUARIO/AccessAudit.git
+cd AccessAudit
 docker-compose up --build
