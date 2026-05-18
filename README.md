@@ -20,3 +20,15 @@ Utilizamos GitHub Actions. Nesta etapa, o pipeline executa uma validação inici
 
 ## Licença
 MIT — veja o arquivo LICENSE.
+
+## Endpoints da API
+
+### accessaudit-service (`:8080`)
+
+| Método | Endpoint | Acesso | Descrição |
+|---|---|---|---|
+| POST | `/api/auditorias` | Público | Executa uma auditoria de acessibilidade a partir de uma URL ou de um código HTML |
+| GET | `/api/auditorias` | Público | Lista as auditorias realizadas |
+| GET | `/api/auditorias/{id}` | Público | Consulta uma auditoria específica |
+| GET | `/api/auditorias/{id}/relatorio` | Público | Consulta o relatório de uma auditoria específica |
+| GET | `/api/regras` | Público | Lista as regras de acessibilidade suportadas |
