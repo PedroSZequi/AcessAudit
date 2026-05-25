@@ -1,0 +1,65 @@
+# ===== macOS =====
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# ===== IDEs =====
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+*.swp
+*.swo
+
+# ===== Java / Maven =====
+target/
+build/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+replay_pid*
+.mvn/wrapper/maven-wrapper.jar
+
+# ===== Spring Boot =====
+HELP.md
+spring-boot.log
+application-local.properties
+application-local.yml
+
+# ===== Logs =====
+*.log
+logs/
+
+# ===== Node / Frontend (preparando para a fase F1) =====
+node_modules/
+dist/
+build/
+.next/
+.nuxt/
+.cache/
+coverage/
+*.tsbuildinfo
+.pnp.*
+
+# ===== Env / Segredos =====
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# ===== Claude Code / Claude Agent =====
+.claude/
+.claude.json
+.claude.local.json
+CLAUDE.md
+CLAUDE.local.md
+
+# ===== Outros =====
+*.tmp
+*.bak

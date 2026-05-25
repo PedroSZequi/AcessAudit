@@ -1,0 +1,39 @@
+@startuml ativ_executar_auditoria
+title AccessAudit — Atividade: Executar auditoria de acessibilidade
+
+skinparam shadowing false
+
+|Frontend|
+start
+:Usuário informa URL ou cola HTML;
+:Envia requisição à API;
+
+|Backend|
+:Recebe requisição;
+if (Tipo de entrada?) then (URL)
+  :Validar URL;
+  if (URL válida?) then (não)
+    :Retornar erro 400;
+    stop
+  endif
+  :Coletar HTML da página;
+else (HTML)
+  :Validar HTML;
+  if (HTML válido?) then (não)
+    :Retornar erro 400;
+    stop
+  endif
+endif
+
+:Executar regras de acessibilidade;
+note right: itera sobre todas as\nRegraAuditoria registradas
+:Classificar problemas por severidade;
+:Gerar relatório;
+:Persistir auditoria no banco;
+:Retornar relatório (JSON);
+
+|Frontend|
+:Exibir relatório ao usuário;
+stop
+
+@enduml
