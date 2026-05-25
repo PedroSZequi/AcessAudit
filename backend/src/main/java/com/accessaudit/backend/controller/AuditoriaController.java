@@ -1,6 +1,7 @@
 package com.accessaudit.backend.controller;
 
 import com.accessaudit.backend.dto.*;
+import com.accessaudit.backend.service.AuditoriaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -8,10 +9,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,13 +20,22 @@ import java.util.UUID;
  * Endpoints de auditorias.
  * Referência: TG3.6 (AccessAudit API.pdf).
  *
- * Todas as operações estão no estado <b>stub</b> (HTTP 501) nesta fase B3.
- * A implementação real entra nas fases B4-B7.
+ * <b>Nota de contrato:</b> {@code POST /api/auditorias} retorna
+ * {@link AuditoriaDetalheResponse} (não apenas {@link RelatorioResponse}
+ * como descrito na TG3.6). A diferença é necessária porque o frontend
+ * precisa do {@code auditoria.id} para navegar para
+ * {@code GET /api/auditorias/{id}/relatorio} (Tela 3 do wireframe).
  */
 @RestController
 @RequestMapping("/api/auditorias")
 @Tag(name = "Auditorias", description = "Executa, lista e consulta auditorias de acessibilidade")
 public class AuditoriaController {
+
+    private final AuditoriaService service;
+
+    public AuditoriaController(AuditoriaService service) {
+        this.service = service;
+    }
 
     @Operation(summary = "Executa uma auditoria de acessibilidade",
             description = """
@@ -38,19 +48,26 @@ public class AuditoriaController {
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Auditoria executada com sucesso"),
             @ApiResponse(responseCode = "400", description = "Entrada inválida",
+                    content = @Content(schema = @Schema(implementation = ErroResponse.class))),
+            @ApiResponse(responseCode = "422", description = "Coleta da URL falhou",
                     content = @Content(schema = @Schema(implementation = ErroResponse.class)))
     })
     @PostMapping
-    public ResponseEntity<RelatorioResponse> executar(@Valid @RequestBody AuditoriaRequest request) {
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    public ResponseEntity<AuditoriaDetalheResponse> executar(
+            @Valid @RequestBody AuditoriaRequest request) {
+        AuditoriaDetalheResponse detalhe = service.executar(request);
+        return ResponseEntity
+                .created(URI.create("/api/auditorias/" + detalhe.id()))
+                .body(detalhe);
     }
 
     @Operation(summary = "Lista auditorias realizadas",
-            description = "Retorna a lista resumida das auditorias executadas pelo sistema.")
+            description = "Retorna a lista resumida das auditorias executadas pelo sistema, " +
+                    "ordenadas da mais recente para a mais antiga.")
     @ApiResponse(responseCode = "200", description = "Lista de auditorias retornada com sucesso")
     @GetMapping
-    public ResponseEntity<List<AuditoriaResumoResponse>> listar() {
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    public List<AuditoriaResumoResponse> listar() {
+        return service.listar();
     }
 
     @Operation(summary = "Consulta uma auditoria específica",
@@ -61,8 +78,8 @@ public class AuditoriaController {
                     content = @Content(schema = @Schema(implementation = ErroResponse.class)))
     })
     @GetMapping("/{id}")
-    public ResponseEntity<AuditoriaDetalheResponse> consultar(@PathVariable UUID id) {
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    public AuditoriaDetalheResponse consultar(@PathVariable UUID id) {
+        return service.consultar(id);
     }
 
     @Operation(summary = "Consulta o relatório de uma auditoria",
@@ -73,7 +90,7 @@ public class AuditoriaController {
                     content = @Content(schema = @Schema(implementation = ErroResponse.class)))
     })
     @GetMapping("/{id}/relatorio")
-    public ResponseEntity<RelatorioResponse> consultarRelatorio(@PathVariable UUID id) {
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    public RelatorioResponse consultarRelatorio(@PathVariable UUID id) {
+        return service.consultarRelatorio(id);
     }
 }
