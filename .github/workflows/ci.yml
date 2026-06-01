@@ -1,21 +1,105 @@
-name: CI Pipeline
+name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main ]
 
 jobs:
-  validacao-inicial:
+  # ===========================================================================
+  # Backend — Java 21 + Maven + Postgres (services container) + testes
+  # ===========================================================================
+  backend:
+    name: Backend (build + tests)
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: accessaudit
+          POSTGRES_USER: accessaudit
+          POSTGRES_PASSWORD: accessaudit_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U accessaudit -d accessaudit"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    defaults:
+      run:
+        working-directory: backend
+
     steps:
-      - name: Checkout do código
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Listar arquivos do repositório
-        run: ls -la
+      - name: Setup JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
 
-      - name: Confirmar pipeline configurado
-        run: echo "GitHub Actions configurado com sucesso"
+      - name: Validar pom + build (sem testes)
+        run: ./mvnw -B -DskipTests verify
+
+      - name: Rodar testes (unitários + integração)
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/accessaudit
+          SPRING_DATASOURCE_USERNAME: accessaudit
+          SPRING_DATASOURCE_PASSWORD: accessaudit_ci
+        run: ./mvnw -B test
+
+      - name: Publicar relatório de testes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: backend/target/surefire-reports/
+
+  # ===========================================================================
+  # Frontend — Node 20 + Vite build + TypeScript check + lint
+  # ===========================================================================
+  frontend:
+    name: Frontend (build + lint + type-check)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Build de produção
+        env:
+          VITE_API_BASE_URL: ""
+        run: npm run build
+
+      - name: Publicar bundle gerado
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
