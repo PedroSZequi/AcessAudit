@@ -3,13 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { auditoriaApi } from "../api/auditoria";
 import { ApiError } from "../api/client";
 import type { TipoEntrada } from "../types/api";
+import { LoadingScreen } from "./LoadingScreen";
 
 /**
  * Form de auditoria (Tela 1 do wireframe TG2.3).
  *  - Tabs URL / HTML
  *  - Validação client-side
- *  - Botão Auditar com estado disabled/loading
- *  - On success: navega para /audit/:id (Tela 3 — implementada em F4)
+ *  - Durante o request, renderiza {@link LoadingScreen} (Tela 2)
+ *  - On success: navega para /audit/:id (Tela 3 — F4)
  */
 export function AuditForm() {
   const [aba, setAba] = useState<TipoEntrada>("URL");
@@ -30,17 +31,17 @@ export function AuditForm() {
     setErro(null);
 
     try {
-      const relatorio = await auditoriaApi.criar({
+      const auditoria = await auditoriaApi.criar({
         tipoEntrada: aba,
         url: aba === "URL" ? url.trim() : undefined,
         html: aba === "HTML" ? html : undefined,
       });
-      navigate(`/audit/${relatorio.id}`);
+      navigate(`/audit/${auditoria.id}`);
     } catch (e) {
       if (e instanceof ApiError) {
         setErro(
           e.status === 501
-            ? "Auditoria ainda não está disponível (backend em construção — fase B6)."
+            ? "Auditoria ainda não está disponível (backend em construção)."
             : e.message
         );
       } else {
@@ -48,6 +49,10 @@ export function AuditForm() {
       }
       setLoading(false);
     }
+  }
+
+  if (loading) {
+    return <LoadingScreen origem={aba === "URL" ? url.trim() : "HTML colado"} />;
   }
 
   return (
@@ -115,7 +120,7 @@ export function AuditForm() {
             disabled={!podeSubmeter}
             className="rounded-md bg-zinc-50 px-4 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400"
           >
-            {loading ? "Auditando..." : "Auditar"}
+            Auditar
           </button>
         )}
       </div>
@@ -127,7 +132,7 @@ export function AuditForm() {
             disabled={!podeSubmeter}
             className="w-full rounded-md bg-zinc-50 px-4 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400"
           >
-            {loading ? "Auditando..." : "Auditar"}
+            Auditar
           </button>
         </div>
       )}

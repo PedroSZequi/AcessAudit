@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Header } from "./components/Header";
 import { AuditPage } from "./pages/AuditPage";
+import { HistoricoPage } from "./pages/HistoricoPage";
 import { HomePage } from "./pages/HomePage";
 
 function App() {
@@ -11,6 +12,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/audit/:id" element={<AuditPage />} />
+          <Route path="/historico" element={<HistoricoPage />} />
         </Routes>
       </div>
     </BrowserRouter>

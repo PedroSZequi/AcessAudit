@@ -7,9 +7,13 @@ import type {
 import { api } from "./client";
 
 export const auditoriaApi = {
-  /** POST /api/auditorias — executa uma auditoria. */
+  /**
+   * POST /api/auditorias — executa uma auditoria.
+   * Retorna {@link AuditoriaDetalheResponse} (não só {@link RelatorioResponse})
+   * para o FE conseguir navegar usando o auditoria.id.
+   */
   criar(req: AuditoriaRequest, signal?: AbortSignal) {
-    return api.post<RelatorioResponse>("/api/auditorias", req, signal);
+    return api.post<AuditoriaDetalheResponse>("/api/auditorias", req, signal);
   },
 
   /** GET /api/auditorias — lista resumida. */
