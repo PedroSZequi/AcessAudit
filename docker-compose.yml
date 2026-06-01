@@ -1,0 +1,62 @@
+# Orquestração dos 3 contêineres do AccessAudit.
+#
+# Uso:
+#   docker compose up --build           # sobe tudo, builda imagens se preciso
+#   docker compose up -d                # em background
+#   docker compose logs -f backend      # acompanha logs de um serviço
+#   docker compose down                 # para tudo (preserva o volume)
+#   docker compose down -v              # para tudo + apaga o volume do banco
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: accessaudit-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: accessaudit
+      POSTGRES_USER: accessaudit
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-accessaudit_dev}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      # Expõe pro host só para debug com psql/DBeaver. Remova em produção.
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U accessaudit -d accessaudit"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    container_name: accessaudit-backend
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/accessaudit
+      SPRING_DATASOURCE_USERNAME: accessaudit
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-accessaudit_dev}
+      # Em produção, o front é servido pelo Nginx no mesmo origin, então CORS
+      # não é necessário. Mantemos uma lista vazia (Spring aceita) para deixar
+      # explícito que não há cliente externo permitido por aqui.
+      ACCESSAUDIT_CORS_ALLOWEDORIGINS: ""
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      # Útil para chamar a API diretamente em dev. Em produção, basta o frontend.
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: accessaudit-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+volumes:
+  postgres-data:
+    name: accessaudit-postgres-data
